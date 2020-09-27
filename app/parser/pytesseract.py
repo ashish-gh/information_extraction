@@ -12,28 +12,29 @@ from pytesseract import Output
 
 from PIL import Image
 
-def parse_image(file_name: str, debug:bool = True)-> pd.DataFrame:
+
+def parse_image(file_name: str, debug: bool = True) -> pd.DataFrame:
     """
     Converts image to dataframe
 
     Args:
         ``file_name``: file_name of image
-    
+
     Return
         ``df``: pd.DataFrame
             dataframe of text from image
     """
     if not file_name:
         return pd.DataFrame([])
-    
+
     image = cv2.imread(file_name)
 
     if debug:
         img = Image.open(file_name).copy()
         img.show()
-    
+
     try:
-        extracted_data = pytesseract.image_to_data(image, output_type= Output.DICT)
+        extracted_data = pytesseract.image_to_data(image, output_type=Output.DICT)
     except Exception as e:
         logger.error(f"Error on pytesseract : {e}")
 
@@ -56,9 +57,9 @@ def parse_image(file_name: str, debug:bool = True)-> pd.DataFrame:
                 "y2": extracted_data["height"][i],
                 "Text": extracted_data["text"][i],
                 "conf": extracted_data["conf"][i],
-                }
+            }
             data.append(tmp_data)
-    
+
     if data:
         df = pd.DataFrame(data)
         # TODO:
@@ -66,6 +67,3 @@ def parse_image(file_name: str, debug:bool = True)-> pd.DataFrame:
         # make function in utils/ clean_dataframe(df)-> df
 
     return df
-
-
-

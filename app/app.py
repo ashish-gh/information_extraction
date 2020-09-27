@@ -4,12 +4,14 @@ import time
 import uuid
 
 import cv2
+import numpy as np
+import pandas as pd
 
 from loguru import logger
 from flask import Flask, abort, jsonify, request, g
 
-
-from .parser.pytesseract import parse_image
+from app.parser.pytesseract import parse_image
+from app.parser.extractor import extractor
 
 
 
@@ -33,7 +35,7 @@ def extract():
     if not request.files:
         print("no files")
         abort_json(400, "IMAGE_MISSING_ON_REQUEST")
-        
+
     logger.debug(f"Request file names {request.files}")
     file = request.files["file"]
 
@@ -42,34 +44,46 @@ def extract():
 
     if ext not in ALLOWED_TYPES:
         print("no allowed types")
-        abort(400, "File Type Not Supported", f"Allowed file types are : {ALLOWED_TYPES}")
-    
+        abort(
+            400, "File Type Not Supported", f"Allowed file types are : {ALLOWED_TYPES}"
+        )
+
     fid = uuid.uuid4().hex
-    file_name = os.path.join("tmp", fid+ext)
+    file_name = os.path.join("tmp", fid + ext)
     file.save(file_name)
 
     logger.info(f"File saved as : {file_name}")
+    res = {
+        "data": None,
+        "message": "no data found",
+        "status_code": 404,
+        "meta_data": {
+            "deltatime": None,
+        },
+    }
 
-    # TODO:
-    # 1. call to function to extract data from image
     if file_name:
         try:
-            # TODO            
-            # First get dataframe for image
-            # then create simple extraction part
+            # TODO
+            start = time.time()
             df = parse_image(file_name, debug=False)
             if not df.empty:
-                for row in df.head().itertuples():
-                    print(row)
-                    
-                # print(df.head())                
+                data = extractor(df)
+                delta = np.around(time.time() - start, 2)
+                logger.debug(f"Delta time for extraction : {delta} seconds")
+
+                res = {
+                    "data": data,
+                    "message": "data found",
+                    "status_code": 200,
+                    "meta_data": {
+                        "deltatime": delta,
+                    },
+                }
+
         except Exception as e:
             logger.error(f"dataframe extraction error : {e}")
-    else:
-        print("No file ")
-    return "Hello, from server"
-
-
+    return res
 
 
 if __name__ == "__main__":
