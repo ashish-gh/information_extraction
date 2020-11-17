@@ -1,7 +1,5 @@
 # information_extraction
 
-# Information extraction using rule_based_method
-
 ## Request
 
 API is at /api/v1/extract/
