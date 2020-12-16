@@ -18,16 +18,19 @@ from app.parser.pytesseract import parse_image
 def extract(fname):
 
     df = parse_image(fname, debug=False)
-    url = "http://127.0.0.1:5000/api/v1/extract/"
-    data = df.to_dict("records")
-    files = [("file", open(fname, "rb"))]
+    if not df.empty:
+        url = "http://127.0.0.1:5000/api/v1/extract/"
+        data = df.to_dict("records")
+        files = [("file", open(fname, "rb"))]
+        logger.info(f"Hitting API at {url}")
+        logger.info(f"File = {fname}")
 
-    logger.info(f"Hitting API at {url}")
-    logger.info(f"File = {fname}")
+        response = requests.request("POST", url, files=files)
+        if response:
+            logger.debug(f"Response = \n{str(response.json())}")
 
-    response = requests.request("POST", url, files=files)
-    logger.debug(f"Response = \n{response.json()}")
-    response = response.json()
+    else:
+        logger.error(f'Dataframe is empty')
 
 
 def main():

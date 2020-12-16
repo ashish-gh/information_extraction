@@ -2,14 +2,13 @@ import os
 import sys
 import time
 import cv2
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from loguru import logger
 import pytesseract
 from pytesseract import Output
-
 from PIL import Image
 
 
@@ -35,8 +34,9 @@ def parse_image(file_name: str, debug: bool = True) -> pd.DataFrame:
 
     try:
         extracted_data = pytesseract.image_to_data(image, output_type=Output.DICT)
-    except Exception as e:
+    except Exception as e:        
         logger.error(f"Error on pytesseract : {e}")
+        return pd.DataFrame([])
 
     # possible keys
     # ['level', 'page_num', 'block_num', 'par_num', 'line_num', 'word_num', 'left', 'top', 'width', 'height', 'conf', 'text'])

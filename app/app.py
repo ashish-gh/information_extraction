@@ -25,6 +25,8 @@ if not os.path.exists("tmp"):
     os.makedirs("tmp")
 
 
+
+
 @app.route("/api/v1/extract/", methods=["POST"])
 def extract():
     logger.info("extracting data from image")
@@ -33,7 +35,6 @@ def extract():
         abort_json(400, "Content-Type can only be json or form-data")
 
     if not request.files:
-        print("no files")
         abort_json(400, "IMAGE_MISSING_ON_REQUEST")
 
     logger.debug(f"Request file names {request.files}")
@@ -43,10 +44,8 @@ def extract():
     ext = ext.lower()
 
     if ext not in ALLOWED_TYPES:
-        print("no allowed types")
-        abort(
-            400, "File Type Not Supported", f"Allowed file types are : {ALLOWED_TYPES}"
-        )
+        logger.error(f'UNSUPPORTED_TYPE : {str(ext)}')
+        abort(415, "File Type Not Supported")
 
     fid = uuid.uuid4().hex
     file_name = os.path.join("tmp", fid + ext)
@@ -71,7 +70,6 @@ def extract():
                 data = extractor(df)
                 delta = np.around(time.time() - start, 2)
                 logger.debug(f"Delta time for extraction : {delta} seconds")
-
                 res = {
                     "data": data,
                     "message": "data found",
